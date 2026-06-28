@@ -533,13 +533,69 @@
           .join("");
       }
 
+      // localStorage helpers
+      let useLocalStorage = false;
+      const LS_KEY = "tasks_local";
+
+      function lsGetTasks() {
+        try {
+          return JSON.parse(localStorage.getItem(LS_KEY) || "[]");
+        } catch {
+          return [];
+        }
+      }
+      function lsSave(tasks) {
+        localStorage.setItem(LS_KEY, JSON.stringify(tasks));
+      }
+      function lsAdd(task, subtasks, datetime) {
+        const tasks = lsGetTasks();
+        const id = "local-" + Date.now();
+        const notes =
+          subtasks.length > 0
+            ? subtasks.map((s, i) => `${i + 1}. ${s}`).join("\n")
+            : "";
+        const rec = {
+          id,
+          fields: {
+            משימה: task,
+            סטטוס: "פתוח",
+            הערות: notes,
+            "תאריך יצירה": new Date().toISOString().split("T")[0],
+          },
+        };
+        tasks.push(rec);
+        lsSave(tasks);
+        return rec;
+      }
+      function lsUpdate(id, status) {
+        const tasks = lsGetTasks();
+        const t = tasks.find((t) => t.id === id);
+        if (t) t.fields["סטטוס"] = status;
+        lsSave(tasks);
+      }
+      function lsUpdateNotes(id, notes) {
+        const tasks = lsGetTasks();
+        const t = tasks.find((t) => t.id === id);
+        if (t) t.fields["הערות"] = notes;
+        lsSave(tasks);
+      }
+
       async function loadTasks() {
         chat.innerHTML = '<div class="system-msg">טוען...</div>';
         document.getElementById("statusText").textContent = "מתחבר...";
         try {
           const res = await fetch("/api/tasks");
           const data = await res.json();
-          const records = data.records || [];
+
+          // Check if server signals localStorage mode
+          if (data.mode === "localStorage") {
+            useLocalStorage = true;
+          }
+
+          const records = useLocalStorage
+            ? lsGetTasks().filter((t) => t.fields["סטטוס"] === "פתוח")
+            : data.records || [];
+
           chat.innerHTML = "";
 
           const divider = document.createElement("div");
@@ -552,7 +608,7 @@
           intro.innerHTML =
             records.length === 0
               ? "✨ אין משימות פתוחות"
-              : `היי טל 👋<br>יש לך <strong>${records.length} משימות פתוחות</strong>`;
+              : `היי! 👋<br>יש לך <strong>${records.length} משימות פתוחות</strong>`;
           chat.appendChild(intro);
 
           records.forEach((rec, i) => setTimeout(() => addBubble(rec), i * 70));
@@ -632,18 +688,20 @@
         el.classList.toggle("done", isDone);
         el.querySelector(".subtask-check").textContent = isDone ? "✓" : "";
 
-        // Update local state
         if (subtaskData[recId]) {
           subtaskData[recId][idx].done = isDone;
           const newNotes = buildNotesFromSubtasks(subtaskData[recId]);
-          // Save to Airtable
-          try {
-            await fetch("/api/tasks", {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id: recId, notes: newNotes }),
-            });
-          } catch {}
+          if (useLocalStorage) {
+            lsUpdateNotes(recId, newNotes);
+          } else {
+            try {
+              await fetch("/api/tasks", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: recId, notes: newNotes }),
+              });
+            } catch {}
+          }
         }
       }
 
@@ -654,13 +712,17 @@
         const name = el.querySelector(".task-name").textContent;
 
         if (action === "done") {
-          try {
-            await fetch("/api/tasks", {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id, status: "סגור" }),
-            });
-          } catch {}
+          if (useLocalStorage) {
+            lsUpdate(id, "סגור");
+          } else {
+            try {
+              await fetch("/api/tasks", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, status: "סגור" }),
+              });
+            } catch {}
+          }
         }
 
         el.classList.add("removing");
@@ -698,13 +760,18 @@
         const datetime = dtInput.value; // "2026-06-23T14:00"
 
         try {
-          const body = { task: name, subtasks, datetime };
-          const res = await fetch("/api/tasks", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          });
-          const rec = await res.json();
+          let rec;
+          if (useLocalStorage) {
+            rec = lsAdd(name, subtasks, datetime);
+          } else {
+            const body = { task: name, subtasks, datetime };
+            const res = await fetch("/api/tasks", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+            });
+            rec = await res.json();
+          }
 
           // Reset form
           nameInput.value = "";

@@ -2,9 +2,14 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
 
   const BASE = process.env.AIRTABLE_BASE_ID;
-  const TABLE = "tblbM772kokDbyE7q";
+  const TABLE = process.env.AIRTABLE_TABLE_ID || "tblbM772kokDbyE7q";
   const PAT = process.env.AIRTABLE_PAT;
   const CAL_TOKEN = process.env.GOOGLE_CALENDAR_TOKEN;
+
+  // No Airtable configured — signal frontend to use localStorage
+  if (!PAT || !BASE) {
+    return res.json({ mode: "localStorage" });
+  }
 
   if (req.method === "GET") {
     const params = new URLSearchParams({
