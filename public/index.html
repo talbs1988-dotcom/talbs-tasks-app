@@ -6,7 +6,8 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1"
     />
-    <title>משימות — טל</title>
+    <title>משימות</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
       * {
         box-sizing: border-box;
@@ -22,6 +23,7 @@
         flex-direction: column;
       }
 
+      /* ─── HEADER ─── */
       .header {
         background: #075e54;
         color: white;
@@ -34,7 +36,6 @@
         z-index: 10;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
       }
-
       .avatar {
         width: 40px;
         height: 40px;
@@ -46,7 +47,6 @@
         font-size: 18px;
         flex-shrink: 0;
       }
-
       .header-info h2 {
         font-size: 16px;
         font-weight: 600;
@@ -56,33 +56,171 @@
         opacity: 0.75;
         margin-top: 1px;
       }
-
-      .refresh-btn {
+      .header-actions {
         margin-right: auto;
+        display: flex;
+        gap: 8px;
+      }
+      .icon-btn {
         background: rgba(255, 255, 255, 0.15);
         border: none;
         color: white;
         width: 34px;
         height: 34px;
         border-radius: 50%;
-        font-size: 18px;
+        font-size: 16px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
         transition:
           background 0.2s,
-          transform 0.4s;
+          transform 0.3s;
       }
-      .refresh-btn:hover {
+      .icon-btn:hover {
         background: rgba(255, 255, 255, 0.25);
+      }
+      .icon-btn.spin:hover {
         transform: rotate(180deg);
+      }
+
+      /* ─── LOGIN SCREEN ─── */
+      #loginScreen {
+        display: none;
+        flex: 1;
+        justify-content: center;
+        align-items: center;
+        padding: 24px;
+      }
+      #loginScreen.active {
+        display: flex;
+      }
+
+      .login-card {
+        background: white;
+        border-radius: 16px;
+        padding: 32px 28px;
+        width: 100%;
+        max-width: 380px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+      }
+      .login-logo {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: #25d366;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        margin: 0 auto 20px;
+      }
+      .login-card h2 {
+        text-align: center;
+        font-size: 20px;
+        color: #111;
+        margin-bottom: 6px;
+      }
+      .login-card p {
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 24px;
+      }
+      .form-group {
+        margin-bottom: 16px;
+      }
+      .form-group label {
+        display: block;
+        font-size: 13px;
+        color: #444;
+        margin-bottom: 6px;
+        font-weight: 500;
+      }
+      .form-group input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1.5px solid #ddd;
+        border-radius: 10px;
+        font-size: 15px;
+        outline: none;
+        transition: border 0.2s;
+        direction: ltr;
+      }
+      .form-group input:focus {
+        border-color: #25d366;
+      }
+
+      .btn-login {
+        width: 100%;
+        padding: 13px;
+        background: #25d366;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        margin-top: 4px;
+      }
+      .btn-login:hover {
+        background: #1da851;
+      }
+      .btn-login:disabled {
+        background: #aaa;
+        cursor: not-allowed;
+      }
+
+      .login-toggle {
+        text-align: center;
+        margin-top: 16px;
+        font-size: 14px;
+        color: #666;
+      }
+      .login-toggle a {
+        color: #075e54;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .login-toggle a:hover {
+        text-decoration: underline;
+      }
+
+      .login-error {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        margin-bottom: 16px;
+        display: none;
+      }
+      .login-success {
+        background: #dcfce7;
+        color: #166534;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        margin-bottom: 16px;
+        display: none;
+      }
+
+      /* ─── TASKS SCREEN ─── */
+      #appScreen {
+        display: none;
+        flex-direction: column;
+        flex: 1;
+      }
+      #appScreen.active {
+        display: flex;
       }
 
       .chat {
         flex: 1;
         overflow-y: auto;
-        padding: 16px 12px 20px;
+        padding: 12px 16px 100px;
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -90,405 +228,534 @@
 
       .date-divider {
         text-align: center;
-        margin: 4px 0;
+        margin: 8px 0;
       }
       .date-divider span {
         background: rgba(255, 255, 255, 0.7);
-        color: #555;
-        font-size: 11px;
-        padding: 3px 10px;
+        padding: 4px 12px;
         border-radius: 8px;
+        font-size: 12px;
+        color: #555;
       }
 
       .intro-bubble {
-        background: white;
-        border-radius: 0 14px 14px 14px;
-        padding: 11px 14px;
-        max-width: 78%;
+        background: #fff3cd;
+        border-radius: 12px;
+        padding: 10px 14px;
         font-size: 14px;
+        max-width: 85%;
+        align-self: flex-start;
         color: #333;
         line-height: 1.5;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       }
 
-      /* Task bubble */
+      .system-msg {
+        text-align: center;
+        color: #888;
+        font-size: 13px;
+        padding: 20px;
+      }
+
       .task-bubble {
         background: white;
-        border-radius: 0 14px 14px 14px;
-        max-width: 92%;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
+        border-radius: 12px 12px 12px 0;
+        padding: 12px 14px;
+        max-width: 88%;
+        align-self: flex-start;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        animation: slideIn 0.25s ease;
         transition:
           opacity 0.3s,
           transform 0.3s;
       }
       .task-bubble.removing {
         opacity: 0;
-        transform: scale(0.9);
+        transform: translateX(-20px);
       }
-
-      .task-header {
-        padding: 11px 14px 8px;
-        display: flex;
-        align-items: flex-start;
-        gap: 8px;
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       .task-name {
-        font-size: 14px;
-        font-weight: 600;
+        font-size: 15px;
+        font-weight: 500;
         color: #111;
-        line-height: 1.4;
-        flex: 1;
       }
 
-      .task-meta {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        flex-wrap: wrap;
-        padding: 0 14px 6px;
-      }
-
-      .task-date-badge {
-        font-size: 11px;
-        color: #888;
-        display: flex;
-        align-items: center;
-        gap: 3px;
-      }
-
-      /* Sub-tasks */
       .subtasks {
-        padding: 4px 14px 10px;
+        margin-top: 10px;
         display: flex;
         flex-direction: column;
-        gap: 5px;
+        gap: 6px;
       }
-
       .subtask-item {
         display: flex;
         align-items: center;
         gap: 8px;
         cursor: pointer;
+        padding: 4px 0;
+        font-size: 14px;
+        color: #333;
+        transition: opacity 0.2s;
       }
-
+      .subtask-item.done {
+        opacity: 0.5;
+      }
+      .subtask-item.done .subtask-label {
+        text-decoration: line-through;
+        color: #999;
+      }
       .subtask-check {
-        width: 18px;
-        height: 18px;
-        border-radius: 4px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
         border: 2px solid #25d366;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 11px;
+        color: #25d366;
         flex-shrink: 0;
-        transition: background 0.15s;
-        font-size: 12px;
-        color: white;
+        transition: background 0.2s;
       }
       .subtask-item.done .subtask-check {
         background: #25d366;
-      }
-      .subtask-item.done .subtask-label {
-        text-decoration: line-through;
-        color: #aaa;
-      }
-
-      .subtask-label {
-        font-size: 13px;
-        color: #333;
-        line-height: 1.3;
-        transition: color 0.15s;
+        color: white;
+        border-color: #25d366;
       }
 
       .task-actions {
         display: flex;
-        border-top: 1px solid #f0f0f0;
+        gap: 8px;
+        margin-top: 10px;
       }
-
       .btn-action {
         flex: 1;
+        padding: 7px;
         border: none;
-        background: none;
-        padding: 10px 0;
-        font-size: 14px;
+        border-radius: 8px;
+        font-size: 13px;
         font-weight: 600;
         cursor: pointer;
-        font-family: inherit;
-        transition: background 0.15s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 5px;
-      }
-      .btn-action:first-child {
-        border-left: 1px solid #f0f0f0;
-      }
-      .btn-done {
-        color: #25d366;
-      }
-      .btn-done:hover {
-        background: #f0fff4;
-      }
-      .btn-skip {
-        color: #e53935;
-      }
-      .btn-skip:hover {
-        background: #fff5f5;
+        transition: opacity 0.2s;
       }
       .btn-action:disabled {
-        opacity: 0.35;
-        cursor: default;
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn-done {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .btn-skip {
+        background: #fee2e2;
+        color: #991b1b;
       }
 
       .confirm-bubble {
-        background: #dcf8c6;
-        border-radius: 14px 0 14px 14px;
+        background: #dcfce7;
+        border-radius: 12px 12px 0 12px;
+        padding: 8px 14px;
+        max-width: 80%;
         align-self: flex-end;
-        padding: 9px 13px;
         font-size: 13px;
-        color: #333;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        max-width: 72%;
-        animation: popIn 0.22s ease;
+        color: #166534;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        animation: slideIn 0.2s ease;
       }
 
-      @keyframes popIn {
-        from {
-          opacity: 0;
-          transform: scale(0.82) translateY(6px);
-        }
-        to {
-          opacity: 1;
-          transform: scale(1) translateY(0);
-        }
+      /* ─── INPUT BAR ─── */
+      .input-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #f0f2f5;
+        padding: 10px 12px;
+        z-index: 10;
       }
-
-      .system-msg {
-        text-align: center;
-        color: rgba(0, 0, 0, 0.4);
-        font-size: 13px;
-        padding: 28px 0;
-      }
-
-      /* Bottom bar */
-      .bottom-bar {
-        background: #f0f0f0;
-        padding: 8px 12px;
-        border-top: 1px solid #ddd;
-      }
-
-      /* Add form panel */
-      .add-form {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-bottom: 8px;
-      }
-
-      .add-form.hidden {
+      .input-bar.hidden {
         display: none;
       }
 
-      .form-row {
+      .add-form {
+        background: white;
+        border-radius: 16px;
+        padding: 14px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .add-form.open {
+        display: flex;
+      }
+
+      .add-form input[type="text"],
+      .add-form input[type="datetime-local"] {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1.5px solid #ddd;
+        border-radius: 10px;
+        font-size: 15px;
+        outline: none;
+        transition: border 0.2s;
+      }
+      .add-form input:focus {
+        border-color: #25d366;
+      }
+
+      .subtask-builder {
         display: flex;
         gap: 8px;
-        align-items: center;
       }
-
-      .task-input,
-      .subtask-input,
-      .datetime-input {
-        background: white;
-        border-radius: 22px;
-        padding: 9px 14px;
-        font-size: 15px;
-        color: #333;
-        border: none;
-        outline: none;
-        font-family: inherit;
+      .subtask-builder input {
         flex: 1;
       }
-
-      .datetime-input {
-        font-size: 13px;
-        padding: 8px 14px;
-        color: #555;
-      }
-
-      .subtask-input {
-        border-radius: 18px;
-        font-size: 13px;
-        padding: 7px 12px;
-      }
-
-      .subtasks-builder {
-        background: white;
-        border-radius: 12px;
-        padding: 8px 12px;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .subtasks-builder-label {
-        font-size: 11px;
-        color: #888;
-        margin-bottom: 2px;
-      }
-
-      .subtask-preview {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 13px;
-        color: #444;
-      }
-      .subtask-preview button {
-        border: none;
-        background: none;
-        color: #e53935;
-        cursor: pointer;
-        font-size: 14px;
-        padding: 0 4px;
-      }
-
-      .sub-row {
-        display: flex;
-        gap: 6px;
-      }
-
       .btn-add-sub {
         background: #075e54;
         color: white;
         border: none;
-        border-radius: 18px;
-        padding: 7px 12px;
-        font-size: 12px;
+        border-radius: 8px;
+        padding: 0 14px;
+        font-size: 18px;
         cursor: pointer;
-        white-space: nowrap;
-        font-family: inherit;
       }
 
-      .send-btn {
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        background: #075e54;
-        border: none;
-        cursor: pointer;
+      .subtask-previews {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        flex-shrink: 0;
-        transition: background 0.15s;
+        flex-direction: column;
+        gap: 4px;
       }
-      .send-btn:hover {
-        background: #128c7e;
+      .subtask-preview {
+        background: #f0faf4;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 13px;
+        color: #333;
+        display: flex;
+        justify-content: space-between;
+      }
+      .subtask-preview button {
+        background: none;
+        border: none;
+        color: #999;
+        cursor: pointer;
+        font-size: 14px;
       }
 
-      .toggle-form-btn {
-        width: 100%;
-        background: white;
+      .form-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .btn-submit {
+        flex: 1;
+        padding: 11px;
+        background: #25d366;
+        color: white;
         border: none;
-        border-radius: 22px;
-        padding: 9px 14px;
-        font-size: 14px;
-        color: #075e54;
+        border-radius: 10px;
+        font-size: 15px;
         font-weight: 600;
         cursor: pointer;
-        font-family: inherit;
+      }
+      .btn-cancel {
+        padding: 11px 16px;
+        background: #f0f2f5;
+        color: #555;
+        border: none;
+        border-radius: 10px;
+        font-size: 15px;
+        cursor: pointer;
+      }
+
+      .input-row {
+        display: flex;
+        gap: 8px;
+      }
+      .btn-open-form {
+        flex: 1;
+        padding: 12px 16px;
+        background: white;
+        color: #075e54;
+        border: 1.5px solid #ddd;
+        border-radius: 24px;
+        font-size: 15px;
+        text-align: right;
+        cursor: pointer;
+        color: #aaa;
+      }
+      .btn-send {
+        width: 46px;
+        height: 46px;
+        background: #25d366;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        font-size: 20px;
+        cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-      }
-
-      .cal-badge {
-        font-size: 10px;
-        background: #e8f5e9;
-        color: #2e7d32;
-        border-radius: 10px;
-        padding: 2px 7px;
-        margin-right: auto;
       }
     </style>
   </head>
   <body>
+    <!-- HEADER -->
     <div class="header">
-      <div class="avatar">📋</div>
+      <div class="avatar">✅</div>
       <div class="header-info">
-        <h2>משימות</h2>
-        <p id="statusText">טוען...</p>
+        <h2>המשימות שלי</h2>
+        <p id="statusText">מתחבר...</p>
       </div>
-      <button class="refresh-btn" onclick="loadTasks()">↻</button>
+      <div class="header-actions">
+        <button class="icon-btn spin" onclick="loadTasks()" title="רענן">
+          ↻
+        </button>
+        <button
+          class="icon-btn"
+          id="logoutBtn"
+          onclick="logout()"
+          title="התנתק"
+          style="display: none"
+        >
+          ⎋
+        </button>
+      </div>
     </div>
 
-    <div class="chat" id="chat"></div>
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen">
+      <div class="login-card">
+        <div class="login-logo">✅</div>
+        <h2 id="loginTitle">ברוכים הבאים</h2>
+        <p id="loginSubtitle">היכנסו לאפליקציית המשימות שלכם</p>
 
-    <div class="bottom-bar">
-      <!-- Toggle button -->
-      <button class="toggle-form-btn" id="toggleBtn" onclick="toggleForm()">
-        ＋ משימה חדשה
-      </button>
+        <div class="login-error" id="loginError"></div>
+        <div class="login-success" id="loginSuccess"></div>
 
-      <!-- Add form (hidden by default) -->
-      <div class="add-form hidden" id="addForm">
-        <!-- Task name -->
-        <div class="form-row">
-          <input class="task-input" id="taskInput" placeholder="שם המשימה..." />
+        <div class="form-group">
+          <label>מייל</label>
+          <input type="email" id="emailInput" placeholder="you@example.com" />
         </div>
-
-        <!-- Date + time -->
-        <div class="form-row">
+        <div class="form-group" id="passwordGroup">
+          <label>סיסמה</label>
           <input
-            class="datetime-input"
-            id="datetimeInput"
-            type="datetime-local"
-            style="flex: 1; border-radius: 12px"
+            type="password"
+            id="passwordInput"
+            placeholder="••••••••"
+            onkeydown="if (event.key === 'Enter') handleAuth();"
           />
-          <span style="font-size: 11px; color: #888; white-space: nowrap"
-            >📅 יומן</span
-          >
+        </div>
+        <div class="form-group" id="nameGroup" style="display: none">
+          <label>שם מלא</label>
+          <input type="text" id="nameInput" placeholder="ישראל ישראלי" />
         </div>
 
-        <!-- Sub-tasks builder -->
-        <div class="subtasks-builder">
-          <div class="subtasks-builder-label">תת-משימות (אופציונלי):</div>
-          <div id="subtaskPreviews"></div>
-          <div class="sub-row">
+        <button class="btn-login" id="authBtn" onclick="handleAuth()">
+          כניסה
+        </button>
+
+        <div class="login-toggle">
+          <span id="toggleText">אין חשבון?</span>
+          <a onclick="toggleMode()"><span id="toggleLink"> הרשמה</span></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- APP SCREEN -->
+    <div id="appScreen">
+      <div class="chat" id="chat"></div>
+
+      <div class="input-bar" id="inputBar">
+        <div class="add-form" id="addForm">
+          <input type="text" id="taskInput" placeholder="שם המשימה..." />
+          <div class="subtask-builder">
             <input
-              class="subtask-input"
+              type="text"
               id="subtaskInput"
-              placeholder="הוסף תת-משימה..."
+              placeholder="תת-משימה (אופציונלי)..."
             />
-            <button class="btn-add-sub" onclick="addSubtask()">הוסף</button>
+            <button class="btn-add-sub" onclick="addSubtask()">+</button>
+          </div>
+          <div class="subtask-previews" id="subtaskPreviews"></div>
+          <input type="datetime-local" id="datetimeInput" />
+          <div class="form-actions">
+            <button class="btn-cancel" onclick="toggleForm()">ביטול</button>
+            <button class="btn-submit" onclick="addTask()">➕ הוסף</button>
           </div>
         </div>
-
-        <!-- Send -->
-        <div class="form-row">
-          <button
-            class="send-btn"
-            style="
-              width: 100%;
-              border-radius: 22px;
-              font-size: 14px;
-              font-weight: 600;
-            "
-            onclick="addTask()"
-          >
-            שלח ➤
+        <div class="input-row">
+          <button class="btn-open-form" onclick="toggleForm()">
+            ✏️ משימה חדשה...
           </button>
+          <button class="btn-send" onclick="toggleForm()">+</button>
         </div>
       </div>
     </div>
 
     <script>
-      const chat = document.getElementById("chat");
+      let supabase = null;
+      let currentUser = null;
+      let isSignup = false;
+      const subtaskData = {};
       let pendingSubtasks = [];
 
+      // ─── INIT ───
+      async function init() {
+        try {
+          const res = await fetch("/api/config");
+          const { supabaseUrl, supabaseKey } = await res.json();
+
+          if (!supabaseUrl || !supabaseKey) {
+            showLogin("הגדרות חסרות — בקש מהמנהל להגדיר Supabase");
+            return;
+          }
+
+          supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          if (session?.user) {
+            currentUser = session.user;
+            showApp();
+            loadTasks();
+          } else {
+            showLogin();
+          }
+
+          supabase.auth.onAuthStateChange((event, session) => {
+            if (event === "SIGNED_IN" && session) {
+              currentUser = session.user;
+              showApp();
+              loadTasks();
+            } else if (event === "SIGNED_OUT") {
+              currentUser = null;
+              showLogin();
+            }
+          });
+        } catch (e) {
+          showLogin("שגיאה בחיבור לשרת");
+        }
+      }
+
+      // ─── AUTH ───
+      function showLogin(errMsg) {
+        document.getElementById("loginScreen").classList.add("active");
+        document.getElementById("appScreen").classList.remove("active");
+        document.getElementById("logoutBtn").style.display = "none";
+        document.getElementById("statusText").textContent = "לא מחובר";
+        if (errMsg) showError(errMsg);
+      }
+
+      function showApp() {
+        document.getElementById("loginScreen").classList.remove("active");
+        document.getElementById("appScreen").classList.add("active");
+        document.getElementById("logoutBtn").style.display = "flex";
+        document.getElementById("statusText").textContent =
+          currentUser?.email || "";
+      }
+
+      function toggleMode() {
+        isSignup = !isSignup;
+        document.getElementById("loginTitle").textContent = isSignup
+          ? "הרשמה"
+          : "ברוכים הבאים";
+        document.getElementById("loginSubtitle").textContent = isSignup
+          ? "צרו חשבון חדש"
+          : "היכנסו לאפליקציית המשימות שלכם";
+        document.getElementById("authBtn").textContent = isSignup
+          ? "הרשמה"
+          : "כניסה";
+        document.getElementById("toggleText").textContent = isSignup
+          ? "יש חשבון?"
+          : "אין חשבון?";
+        document.getElementById("toggleLink").textContent = isSignup
+          ? " כניסה"
+          : " הרשמה";
+        document.getElementById("nameGroup").style.display = isSignup
+          ? "block"
+          : "none";
+        clearMessages();
+      }
+
+      async function handleAuth() {
+        const email = document.getElementById("emailInput").value.trim();
+        const password = document.getElementById("passwordInput").value;
+        const name = document.getElementById("nameInput").value.trim();
+        const btn = document.getElementById("authBtn");
+
+        if (!email || !password) {
+          showError("נא למלא מייל וסיסמה");
+          return;
+        }
+        if (isSignup && !name) {
+          showError("נא למלא שם מלא");
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "...";
+        clearMessages();
+
+        try {
+          if (isSignup) {
+            const { error } = await supabase.auth.signUp({
+              email,
+              password,
+              options: { data: { full_name: name } },
+            });
+            if (error) {
+              showError(error.message);
+              return;
+            }
+            showSuccess("נשלח מייל אישור — בדוק את תיבת הדואר שלך");
+          } else {
+            const { error } = await supabase.auth.signInWithPassword({
+              email,
+              password,
+            });
+            if (error) {
+              showError("מייל או סיסמה שגויים");
+              return;
+            }
+          }
+        } finally {
+          btn.disabled = false;
+          btn.textContent = isSignup ? "הרשמה" : "כניסה";
+        }
+      }
+
+      async function logout() {
+        await supabase.auth.signOut();
+      }
+
+      function showError(msg) {
+        const el = document.getElementById("loginError");
+        el.textContent = msg;
+        el.style.display = "block";
+      }
+      function showSuccess(msg) {
+        const el = document.getElementById("loginSuccess");
+        el.textContent = msg;
+        el.style.display = "block";
+      }
+      function clearMessages() {
+        document.getElementById("loginError").style.display = "none";
+        document.getElementById("loginSuccess").style.display = "none";
+      }
+
+      // ─── TASKS ───
       function todayLabel() {
         return new Date().toLocaleDateString("he-IL", {
           weekday: "long",
@@ -497,107 +764,30 @@
         });
       }
 
-      function toggleForm() {
-        const form = document.getElementById("addForm");
-        const btn = document.getElementById("toggleBtn");
-        const hidden = form.classList.toggle("hidden");
-        btn.textContent = hidden ? "＋ משימה חדשה" : "✕ סגור";
-        if (!hidden) document.getElementById("taskInput").focus();
-      }
-
-      function addSubtask() {
-        const input = document.getElementById("subtaskInput");
-        const text = input.value.trim();
-        if (!text) return;
-        pendingSubtasks.push(text);
-        input.value = "";
-        renderSubtaskPreviews();
-        input.focus();
-      }
-
-      function removeSubtask(i) {
-        pendingSubtasks.splice(i, 1);
-        renderSubtaskPreviews();
-      }
-
-      function renderSubtaskPreviews() {
-        const el = document.getElementById("subtaskPreviews");
-        el.innerHTML = pendingSubtasks
-          .map(
-            (s, i) =>
-              `<div class="subtask-preview">
-            <span>• ${s}</span>
-            <button onclick="removeSubtask(${i})">✕</button>
-          </div>`,
-          )
-          .join("");
-      }
-
-      // localStorage helpers
-      let useLocalStorage = false;
-      const LS_KEY = "tasks_local";
-
-      function lsGetTasks() {
-        try {
-          return JSON.parse(localStorage.getItem(LS_KEY) || "[]");
-        } catch {
-          return [];
-        }
-      }
-      function lsSave(tasks) {
-        localStorage.setItem(LS_KEY, JSON.stringify(tasks));
-      }
-      function lsAdd(task, subtasks, datetime) {
-        const tasks = lsGetTasks();
-        const id = "local-" + Date.now();
-        const notes =
-          subtasks.length > 0
-            ? subtasks.map((s, i) => `${i + 1}. ${s}`).join("\n")
-            : "";
-        const rec = {
-          id,
-          fields: {
-            משימה: task,
-            סטטוס: "פתוח",
-            הערות: notes,
-            "תאריך יצירה": new Date().toISOString().split("T")[0],
-          },
-        };
-        tasks.push(rec);
-        lsSave(tasks);
-        return rec;
-      }
-      function lsUpdate(id, status) {
-        const tasks = lsGetTasks();
-        const t = tasks.find((t) => t.id === id);
-        if (t) t.fields["סטטוס"] = status;
-        lsSave(tasks);
-      }
-      function lsUpdateNotes(id, notes) {
-        const tasks = lsGetTasks();
-        const t = tasks.find((t) => t.id === id);
-        if (t) t.fields["הערות"] = notes;
-        lsSave(tasks);
-      }
-
       async function loadTasks() {
+        const chat = document.getElementById("chat");
         chat.innerHTML = '<div class="system-msg">טוען...</div>';
-        document.getElementById("statusText").textContent = "מתחבר...";
+        document.getElementById("statusText").textContent = "טוען...";
+
         try {
-          const res = await fetch("/api/tasks");
-          const data = await res.json();
+          const { data, error } = await supabase
+            .from("tasks")
+            .select("*")
+            .eq("status", "פתוח")
+            .order("created_at", { ascending: true });
 
-          // Check if server signals localStorage mode
-          if (data.mode === "localStorage") {
-            useLocalStorage = true;
-          }
+          if (error) throw error;
 
-          const records = useLocalStorage
-            ? lsGetTasks().filter((t) => t.fields["סטטוס"] === "פתוח")
-            : data.records || [];
+          const records = (data || []).map((row) => ({
+            id: row.id,
+            fields: {
+              משימה: row.task,
+              סטטוס: row.status,
+              הערות: row.notes || "",
+            },
+          }));
 
           chat.innerHTML = "";
-
           const divider = document.createElement("div");
           divider.className = "date-divider";
           divider.innerHTML = `<span>${todayLabel()}</span>`;
@@ -605,23 +795,22 @@
 
           const intro = document.createElement("div");
           intro.className = "intro-bubble";
+          const name =
+            currentUser?.user_metadata?.full_name?.split(" ")[0] || "שלום";
           intro.innerHTML =
             records.length === 0
               ? "✨ אין משימות פתוחות"
-              : `היי! 👋<br>יש לך <strong>${records.length} משימות פתוחות</strong>`;
+              : `היי ${name} 👋<br>יש לך <strong>${records.length} משימות פתוחות</strong>`;
           chat.appendChild(intro);
 
           records.forEach((rec, i) => setTimeout(() => addBubble(rec), i * 70));
           document.getElementById("statusText").textContent =
             records.length === 0 ? "הכל נקי ✨" : `${records.length} פתוחות`;
         } catch (e) {
-          chat.innerHTML = '<div class="system-msg">שגיאה 😕</div>';
+          chat.innerHTML = '<div class="system-msg">שגיאה בטעינה 😕</div>';
           document.getElementById("statusText").textContent = "שגיאה";
         }
       }
-
-      // subtaskData: { recId -> [{text, done}] }
-      const subtaskData = {};
 
       function parseSubtasks(notes) {
         if (!notes) return [];
@@ -643,6 +832,7 @@
       }
 
       function addBubble(rec) {
+        const chat = document.getElementById("chat");
         const name = rec.fields["משימה"] || "";
         const notes = rec.fields["הערות"] || "";
         const subtasks = parseSubtasks(notes);
@@ -668,9 +858,7 @@
             : "";
 
         el.innerHTML = `
-          <div class="task-header">
-            <div class="task-name">${name}</div>
-          </div>
+          <div class="task-name">${name}</div>
           ${subtasksHTML}
           <div class="task-actions">
             <button class="btn-action btn-skip" onclick="update('${rec.id}', 'skip')">✗ לא בוצע</button>
@@ -691,17 +879,10 @@
         if (subtaskData[recId]) {
           subtaskData[recId][idx].done = isDone;
           const newNotes = buildNotesFromSubtasks(subtaskData[recId]);
-          if (useLocalStorage) {
-            lsUpdateNotes(recId, newNotes);
-          } else {
-            try {
-              await fetch("/api/tasks", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: recId, notes: newNotes }),
-              });
-            } catch {}
-          }
+          await supabase
+            .from("tasks")
+            .update({ notes: newNotes })
+            .eq("id", recId);
         }
       }
 
@@ -712,17 +893,7 @@
         const name = el.querySelector(".task-name").textContent;
 
         if (action === "done") {
-          if (useLocalStorage) {
-            lsUpdate(id, "סגור");
-          } else {
-            try {
-              await fetch("/api/tasks", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id, status: "סגור" }),
-              });
-            } catch {}
-          }
+          await supabase.from("tasks").update({ status: "סגור" }).eq("id", id);
         }
 
         el.classList.add("removing");
@@ -736,6 +907,7 @@
       }
 
       function addConfirm(text) {
+        const chat = document.getElementById("chat");
         const c = document.createElement("div");
         c.className = "confirm-bubble";
         c.textContent = text;
@@ -750,42 +922,84 @@
         el.textContent = newN === 0 ? "הכל נקי ✨" : `${newN} פתוחות`;
       }
 
+      // ─── ADD TASK ───
+      function toggleForm() {
+        const form = document.getElementById("addForm");
+        form.classList.toggle("open");
+        if (form.classList.contains("open")) {
+          document.getElementById("taskInput").focus();
+        }
+      }
+
+      function renderSubtaskPreviews() {
+        document.getElementById("subtaskPreviews").innerHTML = pendingSubtasks
+          .map(
+            (s, i) =>
+              `<div class="subtask-preview">
+              <span>${i + 1}. ${s}</span>
+              <button onclick="removeSubtask(${i})">✕</button>
+            </div>`,
+          )
+          .join("");
+      }
+
+      function addSubtask() {
+        const inp = document.getElementById("subtaskInput");
+        const val = inp.value.trim();
+        if (!val) return;
+        pendingSubtasks.push(val);
+        inp.value = "";
+        renderSubtaskPreviews();
+      }
+
+      function removeSubtask(i) {
+        pendingSubtasks.splice(i, 1);
+        renderSubtaskPreviews();
+      }
+
       async function addTask() {
         const nameInput = document.getElementById("taskInput");
         const dtInput = document.getElementById("datetimeInput");
         const name = nameInput.value.trim();
         if (!name) return;
 
-        const subtasks = [...pendingSubtasks];
-        const datetime = dtInput.value; // "2026-06-23T14:00"
+        const notes =
+          pendingSubtasks.length > 0
+            ? pendingSubtasks.map((s, i) => `${i + 1}. ${s}`).join("\n")
+            : null;
 
-        try {
-          let rec;
-          if (useLocalStorage) {
-            rec = lsAdd(name, subtasks, datetime);
-          } else {
-            const body = { task: name, subtasks, datetime };
-            const res = await fetch("/api/tasks", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(body),
-            });
-            rec = await res.json();
-          }
+        const { data, error } = await supabase
+          .from("tasks")
+          .insert({
+            task: name,
+            status: "פתוח",
+            notes,
+            user_id: currentUser.id,
+          })
+          .select()
+          .single();
 
-          // Reset form
-          nameInput.value = "";
-          dtInput.value = "";
-          pendingSubtasks = [];
-          renderSubtaskPreviews();
-          toggleForm();
-
-          addConfirm(`➕ נוסף${datetime ? " 📅" : ""} — ${name}`);
-          addBubble(rec);
-          updateCount(+1);
-        } catch {
+        if (error) {
           addConfirm("שגיאה בהוספה");
+          return;
         }
+
+        nameInput.value = "";
+        dtInput.value = "";
+        pendingSubtasks = [];
+        renderSubtaskPreviews();
+        toggleForm();
+
+        addConfirm(`➕ נוסף — ${name}`);
+        addBubble({
+          id: data.id,
+          fields: {
+            משימה: data.task,
+            סטטוס: data.status,
+            הערות: data.notes || "",
+          },
+        });
+        updateCount(+1);
       }
 
       document
@@ -797,10 +1011,13 @@
           }
         });
       document.getElementById("taskInput").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") addTask();
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addTask();
+        }
       });
 
-      loadTasks();
+      init();
     </script>
   </body>
 </html>
