@@ -43,15 +43,28 @@ cd talbs-tasks-app
 
 ## שלב 3 — פריסה ל-Vercel
 
-```bash
-# אם אין Vercel CLI:
-npm install -g vercel
+### אם אין חשבון Vercel:
 
-# פרוס:
+1. היכנס ל-https://vercel.com ← Sign Up (אפשר עם GitHub)
+2. זה בחינם לגמרי
+
+### אם אין Vercel CLI:
+
+```bash
+npm install -g vercel
+```
+
+> אם מופיעה שגיאה על `npm` — יש להתקין תחילה Node.js מ-https://nodejs.org (גרסת LTS)
+
+### פריסה:
+
+```bash
 vercel --prod
 ```
 
-עקוב אחרי ההוראות (login ← confirm).
+- יבקש לעשות login בדפדפן ← אשר
+- ישאל שם הפרויקט ← Enter לאישור ברירת המחדל
+- בסוף יציג URL — זה האפליקציה שלך
 
 ### אם בחרו Airtable — הוסף משתני סביבה:
 
