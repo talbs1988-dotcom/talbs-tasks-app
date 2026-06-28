@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1"
+    />
+    <title>משימות — טל</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+        background: #ece5dd;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .header {
+        background: #075e54;
+        color: white;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #25d366;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+
+      .header-info h2 {
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .header-info p {
+        font-size: 12px;
+        opacity: 0.75;
+        margin-top: 1px;
+      }
+
+      .refresh-btn {
+        margin-right: auto;
+        background: rgba(255, 255, 255, 0.15);
+        border: none;
+        color: white;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          background 0.2s,
+          transform 0.4s;
+      }
+      .refresh-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: rotate(180deg);
+      }
+
+      .chat {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 12px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .date-divider {
+        text-align: center;
+        margin: 4px 0;
+      }
+      .date-divider span {
+        background: rgba(255, 255, 255, 0.7);
+        color: #555;
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 8px;
+      }
+
+      .intro-bubble {
+        background: white;
+        border-radius: 0 14px 14px 14px;
+        padding: 11px 14px;
+        max-width: 78%;
+        font-size: 14px;
+        color: #333;
+        line-height: 1.5;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Task bubble */
+      .task-bubble {
+        background: white;
+        border-radius: 0 14px 14px 14px;
+        max-width: 92%;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition:
+          opacity 0.3s,
+          transform 0.3s;
+      }
+      .task-bubble.removing {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+
+      .task-header {
+        padding: 11px 14px 8px;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .task-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111;
+        line-height: 1.4;
+        flex: 1;
+      }
+
+      .task-meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        padding: 0 14px 6px;
+      }
+
+      .task-date-badge {
+        font-size: 11px;
+        color: #888;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+      }
+
+      /* Sub-tasks */
+      .subtasks {
+        padding: 4px 14px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .subtask-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+      }
+
+      .subtask-check {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        border: 2px solid #25d366;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: background 0.15s;
+        font-size: 12px;
+        color: white;
+      }
+      .subtask-item.done .subtask-check {
+        background: #25d366;
+      }
+      .subtask-item.done .subtask-label {
+        text-decoration: line-through;
+        color: #aaa;
+      }
+
+      .subtask-label {
+        font-size: 13px;
+        color: #333;
+        line-height: 1.3;
+        transition: color 0.15s;
+      }
+
+      .task-actions {
+        display: flex;
+        border-top: 1px solid #f0f0f0;
+      }
+
+      .btn-action {
+        flex: 1;
+        border: none;
+        background: none;
+        padding: 10px 0;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background 0.15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+      }
+      .btn-action:first-child {
+        border-left: 1px solid #f0f0f0;
+      }
+      .btn-done {
+        color: #25d366;
+      }
+      .btn-done:hover {
+        background: #f0fff4;
+      }
+      .btn-skip {
+        color: #e53935;
+      }
+      .btn-skip:hover {
+        background: #fff5f5;
+      }
+      .btn-action:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+
+      .confirm-bubble {
+        background: #dcf8c6;
+        border-radius: 14px 0 14px 14px;
+        align-self: flex-end;
+        padding: 9px 13px;
+        font-size: 13px;
+        color: #333;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        max-width: 72%;
+        animation: popIn 0.22s ease;
+      }
+
+      @keyframes popIn {
+        from {
+          opacity: 0;
+          transform: scale(0.82) translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
+      .system-msg {
+        text-align: center;
+        color: rgba(0, 0, 0, 0.4);
+        font-size: 13px;
+        padding: 28px 0;
+      }
+
+      /* Bottom bar */
+      .bottom-bar {
+        background: #f0f0f0;
+        padding: 8px 12px;
+        border-top: 1px solid #ddd;
+      }
+
+      /* Add form panel */
+      .add-form {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .add-form.hidden {
+        display: none;
+      }
+
+      .form-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .task-input,
+      .subtask-input,
+      .datetime-input {
+        background: white;
+        border-radius: 22px;
+        padding: 9px 14px;
+        font-size: 15px;
+        color: #333;
+        border: none;
+        outline: none;
+        font-family: inherit;
+        flex: 1;
+      }
+
+      .datetime-input {
+        font-size: 13px;
+        padding: 8px 14px;
+        color: #555;
+      }
+
+      .subtask-input {
+        border-radius: 18px;
+        font-size: 13px;
+        padding: 7px 12px;
+      }
+
+      .subtasks-builder {
+        background: white;
+        border-radius: 12px;
+        padding: 8px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .subtasks-builder-label {
+        font-size: 11px;
+        color: #888;
+        margin-bottom: 2px;
+      }
+
+      .subtask-preview {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: #444;
+      }
+      .subtask-preview button {
+        border: none;
+        background: none;
+        color: #e53935;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 0 4px;
+      }
+
+      .sub-row {
+        display: flex;
+        gap: 6px;
+      }
+
+      .btn-add-sub {
+        background: #075e54;
+        color: white;
+        border: none;
+        border-radius: 18px;
+        padding: 7px 12px;
+        font-size: 12px;
+        cursor: pointer;
+        white-space: nowrap;
+        font-family: inherit;
+      }
+
+      .send-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #075e54;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+        transition: background 0.15s;
+      }
+      .send-btn:hover {
+        background: #128c7e;
+      }
+
+      .toggle-form-btn {
+        width: 100%;
+        background: white;
+        border: none;
+        border-radius: 22px;
+        padding: 9px 14px;
+        font-size: 14px;
+        color: #075e54;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .cal-badge {
+        font-size: 10px;
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-radius: 10px;
+        padding: 2px 7px;
+        margin-right: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="avatar">📋</div>
+      <div class="header-info">
+        <h2>משימות</h2>
+        <p id="statusText">טוען...</p>
+      </div>
+      <button class="refresh-btn" onclick="loadTasks()">↻</button>
+    </div>
+
+    <div class="chat" id="chat"></div>
+
+    <div class="bottom-bar">
+      <!-- Toggle button -->
+      <button class="toggle-form-btn" id="toggleBtn" onclick="toggleForm()">
+        ＋ משימה חדשה
+      </button>
+
+      <!-- Add form (hidden by default) -->
+      <div class="add-form hidden" id="addForm">
+        <!-- Task name -->
+        <div class="form-row">
+          <input class="task-input" id="taskInput" placeholder="שם המשימה..." />
+        </div>
+
+        <!-- Date + time -->
+        <div class="form-row">
+          <input
+            class="datetime-input"
+            id="datetimeInput"
+            type="datetime-local"
+            style="flex: 1; border-radius: 12px"
+          />
+          <span style="font-size: 11px; color: #888; white-space: nowrap"
+            >📅 יומן</span
+          >
+        </div>
+
+        <!-- Sub-tasks builder -->
+        <div class="subtasks-builder">
+          <div class="subtasks-builder-label">תת-משימות (אופציונלי):</div>
+          <div id="subtaskPreviews"></div>
+          <div class="sub-row">
+            <input
+              class="subtask-input"
+              id="subtaskInput"
+              placeholder="הוסף תת-משימה..."
+            />
+            <button class="btn-add-sub" onclick="addSubtask()">הוסף</button>
+          </div>
+        </div>
+
+        <!-- Send -->
+        <div class="form-row">
+          <button
+            class="send-btn"
+            style="
+              width: 100%;
+              border-radius: 22px;
+              font-size: 14px;
+              font-weight: 600;
+            "
+            onclick="addTask()"
+          >
+            שלח ➤
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const chat = document.getElementById("chat");
+      let pendingSubtasks = [];
+
+      function todayLabel() {
+        return new Date().toLocaleDateString("he-IL", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+        });
+      }
+
+      function toggleForm() {
+        const form = document.getElementById("addForm");
+        const btn = document.getElementById("toggleBtn");
+        const hidden = form.classList.toggle("hidden");
+        btn.textContent = hidden ? "＋ משימה חדשה" : "✕ סגור";
+        if (!hidden) document.getElementById("taskInput").focus();
+      }
+
+      function addSubtask() {
+        const input = document.getElementById("subtaskInput");
+        const text = input.value.trim();
+        if (!text) return;
+        pendingSubtasks.push(text);
+        input.value = "";
+        renderSubtaskPreviews();
+        input.focus();
+      }
+
+      function removeSubtask(i) {
+        pendingSubtasks.splice(i, 1);
+        renderSubtaskPreviews();
+      }
+
+      function renderSubtaskPreviews() {
+        const el = document.getElementById("subtaskPreviews");
+        el.innerHTML = pendingSubtasks
+          .map(
+            (s, i) =>
+              `<div class="subtask-preview">
+            <span>• ${s}</span>
+            <button onclick="removeSubtask(${i})">✕</button>
+          </div>`,
+          )
+          .join("");
+      }
+
+      async function loadTasks() {
+        chat.innerHTML = '<div class="system-msg">טוען...</div>';
+        document.getElementById("statusText").textContent = "מתחבר...";
+        try {
+          const res = await fetch("/api/tasks");
+          const data = await res.json();
+          const records = data.records || [];
+          chat.innerHTML = "";
+
+          const divider = document.createElement("div");
+          divider.className = "date-divider";
+          divider.innerHTML = `<span>${todayLabel()}</span>`;
+          chat.appendChild(divider);
+
+          const intro = document.createElement("div");
+          intro.className = "intro-bubble";
+          intro.innerHTML =
+            records.length === 0
+              ? "✨ אין משימות פתוחות"
+              : `היי טל 👋<br>יש לך <strong>${records.length} משימות פתוחות</strong>`;
+          chat.appendChild(intro);
+
+          records.forEach((rec, i) => setTimeout(() => addBubble(rec), i * 70));
+          document.getElementById("statusText").textContent =
+            records.length === 0 ? "הכל נקי ✨" : `${records.length} פתוחות`;
+        } catch (e) {
+          chat.innerHTML = '<div class="system-msg">שגיאה 😕</div>';
+          document.getElementById("statusText").textContent = "שגיאה";
+        }
+      }
+
+      // subtaskData: { recId -> [{text, done}] }
+      const subtaskData = {};
+
+      function parseSubtasks(notes) {
+        if (!notes) return [];
+        return notes
+          .split("\n")
+          .map((l) => {
+            const clean = l.replace(/^[\d\.\-\*•\s]+/, "").trim();
+            if (!clean) return null;
+            const done = clean.startsWith("✓ ");
+            return { text: done ? clean.slice(2) : clean, done };
+          })
+          .filter(Boolean);
+      }
+
+      function buildNotesFromSubtasks(items) {
+        return items
+          .map((s, i) => `${i + 1}. ${s.done ? "✓ " : ""}${s.text}`)
+          .join("\n");
+      }
+
+      function addBubble(rec) {
+        const name = rec.fields["משימה"] || "";
+        const notes = rec.fields["הערות"] || "";
+        const subtasks = parseSubtasks(notes);
+        subtaskData[rec.id] = subtasks;
+
+        const el = document.createElement("div");
+        el.className = "task-bubble";
+        el.id = `t-${rec.id}`;
+
+        const subtasksHTML =
+          subtasks.length > 0
+            ? `<div class="subtasks" id="subs-${rec.id}">
+              ${subtasks
+                .map(
+                  (s, i) =>
+                    `<div class="subtask-item${s.done ? " done" : ""}" id="sub-${rec.id}-${i}" onclick="toggleSub('${rec.id}',${i})">
+                  <div class="subtask-check">${s.done ? "✓" : ""}</div>
+                  <span class="subtask-label">${s.text}</span>
+                </div>`,
+                )
+                .join("")}
+            </div>`
+            : "";
+
+        el.innerHTML = `
+          <div class="task-header">
+            <div class="task-name">${name}</div>
+          </div>
+          ${subtasksHTML}
+          <div class="task-actions">
+            <button class="btn-action btn-skip" onclick="update('${rec.id}', 'skip')">✗ לא בוצע</button>
+            <button class="btn-action btn-done" onclick="update('${rec.id}', 'done')">✓ בוצע</button>
+          </div>`;
+
+        chat.appendChild(el);
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      async function toggleSub(recId, idx) {
+        const el = document.getElementById(`sub-${recId}-${idx}`);
+        if (!el) return;
+        const isDone = !el.classList.contains("done");
+        el.classList.toggle("done", isDone);
+        el.querySelector(".subtask-check").textContent = isDone ? "✓" : "";
+
+        // Update local state
+        if (subtaskData[recId]) {
+          subtaskData[recId][idx].done = isDone;
+          const newNotes = buildNotesFromSubtasks(subtaskData[recId]);
+          // Save to Airtable
+          try {
+            await fetch("/api/tasks", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: recId, notes: newNotes }),
+            });
+          } catch {}
+        }
+      }
+
+      async function update(id, action) {
+        const el = document.getElementById(`t-${id}`);
+        if (!el) return;
+        el.querySelectorAll("button").forEach((b) => (b.disabled = true));
+        const name = el.querySelector(".task-name").textContent;
+
+        if (action === "done") {
+          try {
+            await fetch("/api/tasks", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id, status: "סגור" }),
+            });
+          } catch {}
+        }
+
+        el.classList.add("removing");
+        setTimeout(() => {
+          el.remove();
+          addConfirm(
+            action === "done" ? `✅ בוצע — ${name}` : `⏭ נדלג — ${name}`,
+          );
+          updateCount(action === "done" ? -1 : 0);
+        }, 300);
+      }
+
+      function addConfirm(text) {
+        const c = document.createElement("div");
+        c.className = "confirm-bubble";
+        c.textContent = text;
+        chat.appendChild(c);
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      function updateCount(delta) {
+        const el = document.getElementById("statusText");
+        const n = parseInt(el.textContent) || 0;
+        const newN = Math.max(0, n + delta);
+        el.textContent = newN === 0 ? "הכל נקי ✨" : `${newN} פתוחות`;
+      }
+
+      async function addTask() {
+        const nameInput = document.getElementById("taskInput");
+        const dtInput = document.getElementById("datetimeInput");
+        const name = nameInput.value.trim();
+        if (!name) return;
+
+        const subtasks = [...pendingSubtasks];
+        const datetime = dtInput.value; // "2026-06-23T14:00"
+
+        try {
+          const body = { task: name, subtasks, datetime };
+          const res = await fetch("/api/tasks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const rec = await res.json();
+
+          // Reset form
+          nameInput.value = "";
+          dtInput.value = "";
+          pendingSubtasks = [];
+          renderSubtaskPreviews();
+          toggleForm();
+
+          addConfirm(`➕ נוסף${datetime ? " 📅" : ""} — ${name}`);
+          addBubble(rec);
+          updateCount(+1);
+        } catch {
+          addConfirm("שגיאה בהוספה");
+        }
+      }
+
+      document
+        .getElementById("subtaskInput")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            addSubtask();
+          }
+        });
+      document.getElementById("taskInput").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") addTask();
+      });
+
+      loadTasks();
+    </script>
+  </body>
+</html>
