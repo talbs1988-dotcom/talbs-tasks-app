@@ -984,13 +984,24 @@
           return;
         }
 
+        // Calendar event if datetime provided
+        if (datetime) {
+          try {
+            await fetch("/api/calendar", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ task: name, notes, datetime }),
+            });
+          } catch {}
+        }
+
         nameInput.value = "";
         dtInput.value = "";
         pendingSubtasks = [];
         renderSubtaskPreviews();
         toggleForm();
 
-        addConfirm(`➕ נוסף — ${name}`);
+        addConfirm(`➕ נוסף${datetime ? " 📅" : ""} — ${name}`);
         addBubble({
           id: data.id,
           fields: {
